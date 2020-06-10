@@ -1,0 +1,9 @@
+---
+# Loops over all key types (rsa, dsa, etc.)
+# Checks that /etc/ssh/ssh_host_{{type}}_key exists
+# Generates it if it does not exist
+# Signs any newly generated host keys
+- include_tasks: ssh_host_key.yml
+  loop: "{{ key_types }}"
+  loop_control:
+    loop_var: type

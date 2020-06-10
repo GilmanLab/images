@@ -1,0 +1,47 @@
+---
+# Must pipe a 'y' to force ssh-keygen to overwrite an existing file
+# The normal /bin/sh doesn't support redirection, have to use /bin/bash
+# This forcibly regenerates a host key and is invoked by the `force_ssh_host` variable
+- name: "Create SSH {{ type|upper }} host key"
+  become: yes
+  shell:
+    cmd: "ssh-keygen -q -t {{ type }} -f '/etc/ssh/ssh_host_{{ type }}_key' -N '' <<< y"
+    executable: /bin/bash
+  when: force_ssh_host|bool
+
+# Validates host key exists and creates it if it does not
+- name: "Check for SSH {{ type|upper }} host key"
+  become: yes
+  shell:
+    cmd: "ssh-keygen -q -t {{ type }} -f '/etc/ssh/ssh_host_{{ type }}_key' -N ''"
+    creates: "/etc/ssh/ssh_host_{{ type }}_key"
+  register: keygen
+
+###
+# All tasks below only trigger when a new host key is generated
+###
+- name: "Slurp SSH {{ type|upper }} public key"
+  slurp:
+    src: "/etc/ssh/ssh_host_{{ type }}_key.pub"
+  register: pub_key
+  when: force_ssh_host or keygen['changed']
+
+# Slurp always returns base64 encoded content, so it must be decoded frst
+# Must delegate to localhost so that local Vault env vars are used
+- name: "Sign SSH {{ type|upper }} key"
+  hashivault_write:
+    secret: "/ssh-host/sign/lab"
+    data:
+      cert_type: "host"
+      public_key: "{{ pub_key['content'] | b64decode }}"
+  register: signed_key
+  delegate_to: localhost
+  when: force_ssh_host or keygen['changed']
+
+- name: "Write signed SSH {{ type|upper }} key"
+  become: yes
+  copy:
+    content: "{{ signed_key['data']['data']['signed_key'] }}"
+    dest: "/etc/ssh/ssh_host_{{ type }}_key-cert.pub"
+  when: force_ssh_host or keygen['changed']
+  notify: restart_ssh

@@ -1,0 +1,61 @@
+{
+  "builders": [
+    {
+      "type": "vsphere-iso",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "ssh_password": "{{ user `ssh_password` }}",
+      "vcenter_server": "{{ user `vs_server` }}",
+      "username": "{{ user `vs_api_username` }}",
+      "password": "{{ user `vs_api_password` }}",
+      "insecure_connection": "{{ user `vs_insecure` }}",
+      "datacenter": "{{ user `vs_datacenter` }}",
+      "vm_name": "{{ user `vm_name` }}",
+      "folder": "{{ user `vm_folder` }}",
+      "cluster": "{{ user `vm_cluster` }}",
+      "datastore": "{{ user `vm_datastore` }}",
+      "notes": "{{ user `vm_notes` }}",
+      "CPUs": "{{ user `hw_cpus` }}",
+      "cpu_cores": "{{ user `hw_cores` }}",
+      "RAM": "{{ user `hw_ram` }}",
+      "disk_size": "{{ user `hw_disk_size` }}",
+      "disk_controller_type": "{{ user `hw_disk_controller` }}",
+      "disk_thin_provisioned": "{{ user `hw_thin` }}",
+      "network_adapters": [
+        {
+          "network": "Prod",
+          "network_card": "vmxnet3"
+        }
+      ],
+      "storage": [
+        {
+          "disk_size": 50000,
+          "disk_thin_provisioned": true
+        }
+      ],
+      "guest_os_type": "{{ user `hw_os` }}",
+      "iso_urls": [
+        "{{ user `iso_url` }}"
+      ],
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "floppy_files": "{{ user `boot_floppy` }}",
+      "boot_command": "{{ user `boot_command` }}",
+      "convert_to_template": "true"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "{{ user `playbook` }}",
+      "host_alias": "{{ user `host_alias` }}",
+      "user": "{{ user `ssh_username` }}",
+      "use_proxy": "false",
+      "extra_arguments": [
+        "--extra-vars", "ansible_sudo_pass={{ user `ssh_password` }} ansible_ssh_pass={{ user `ssh_password` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": ["curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sudo sh -"]
+    }
+  ]
+}

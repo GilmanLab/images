@@ -1,0 +1,5 @@
+{
+  "vm_name": "ubuntu18044",
+  "playbook": "ansible/ubuntu18044.yml",
+  "host_alias": "ubuntu18044"
+}

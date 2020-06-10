@@ -1,0 +1,5 @@
+{
+  "vm_name": "kube",
+  "playbook": "ansible/kube.yml",
+  "host_alias": "kube"
+}

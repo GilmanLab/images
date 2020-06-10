@@ -1,0 +1,5 @@
+---
+- hosts: ubuntu18044
+  become: yes
+  roles:
+    - common

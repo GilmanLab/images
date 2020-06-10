@@ -1,0 +1,6 @@
+- name: Restart SSH daemon
+  become: yes
+  service:
+    name: ssh
+    state: restarted
+  listen: restart_ssh
